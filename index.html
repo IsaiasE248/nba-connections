@@ -1,0 +1,56 @@
+// netlify/functions/player-image.js
+// Proxies Tank01 API server-side to avoid CORS issues
+
+const RAPIDAPI_KEY = '5960282373msh363e9684c6578fdp1d1bc8jsn933ebb428933';
+
+exports.handler = async (event) => {
+  const name = event.queryStringParameters?.name;
+
+  if (!name) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: 'Missing name parameter' })
+    };
+  }
+
+  try {
+    const url = `https://tank01-fantasy-stats.p.rapidapi.com/getNBAPlayerInfo?playerName=${encodeURIComponent(name)}&statsToGet=averages`;
+
+    const response = await fetch(url, {
+      headers: {
+        'x-rapidapi-key': RAPIDAPI_KEY,
+        'x-rapidapi-host': 'tank01-fantasy-stats.p.rapidapi.com'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`API returned ${response.status}`);
+    }
+
+    const data = await response.json();
+    const players = data?.body;
+
+    let imgUrl = null;
+    if (players && players.length > 0) {
+      const p = players[0];
+      imgUrl = p.espnHeadshot || p.nbaComHeadshot || p.yahooHeadshot || null;
+    }
+
+    return {
+      statusCode: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        // Cache for 7 days — player photos rarely change
+        'Cache-Control': 'public, max-age=604800'
+      },
+      body: JSON.stringify({ name, imgUrl })
+    };
+  } catch (err) {
+    return {
+      statusCode: 200, // Return 200 so client handles gracefully
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({ name, imgUrl: null, error: err.message })
+    };
+  }
+};
