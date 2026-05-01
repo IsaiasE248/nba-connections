@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Puzzle Editor — NBA Connections</title>
+<link rel="stylesheet" href="style.css" />
+<style>
+body { padding-top: 58px; }
+.editor-wrap { max-width: 820px; margin: 0 auto; padding: 28px 20px 80px; }
+
+#login-screen {
+  min-height: calc(100vh - 58px);
+  display: flex; align-items: center; justify-content: center;
+}
+.login-box {
+  background: var(--bg-card); border: 1px solid var(--border-light);
+  border-radius: 18px; padding: 44px; text-align: center;
+  max-width: 380px; width: 100%;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+}
+.login-box h2 {
+  font-family: 'Bebas Neue', sans-serif; font-size: 40px;
+  letter-spacing: 2px; margin-bottom: 6px;
+}
+.login-box p { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
+
+.section-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; display: block;
+}
+
+.editor-title { font-family: 'Bebas Neue', sans-serif; font-size: 52px; color: var(--text); letter-spacing: 2px; }
+.editor-title span { color: var(--accent); }
+
+.puzzle-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 32px; }
+.puzzle-item {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; transition: border-color 0.15s;
+}
+.puzzle-item:hover { border-color: var(--border-light); }
+.puzzle-item.active { border-color: var(--accent); }
+.puzzle-date { font-weight: 600; font-size: 14px; color: var(--text); }
+.puzzle-preview { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+.form-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px; margin-bottom: 14px;
+}
+.form-row { margin-bottom: 14px; }
+.form-row:last-child { margin-bottom: 0; }
+label {
+  display: block; font-size: 11px; font-weight: 700;
+  color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;
+}
+
+.cat-block {
+  border-radius: 12px; padding: 18px; margin-bottom: 12px;
+  border: 1px solid var(--border);
+}
+.cat-block-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+}
+.cat-dot { width: 14px; height: 14px; border-radius: 50%; }
+.cat-block-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; }
+
+.players-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.preview-grid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin: 16px 0;
+}
+.preview-tile {
+  aspect-ratio: 3/4; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--bg-card); display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end; overflow: hidden;
+  position: relative;
+}
+.preview-tile .pt-name {
+  width: 100%; padding: 5px 4px; text-align: center;
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.3px; background: var(--bg-card); z-index: 1;
+}
+.preview-tile .pt-dot {
+  position: absolute; top: 6px; right: 6px;
+  width: 8px; height: 8px; border-radius: 50%;
+}
+
+.toast-bottom {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+  background: var(--bg-card); border: 1px solid var(--border-light);
+  padding: 12px 24px; border-radius: 10px;
+  font-size: 13px; font-weight: 600; color: var(--text);
+  opacity: 0; transition: opacity 0.3s; z-index: 300;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  white-space: nowrap;
+}
+.toast-bottom.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-logo">NBA <span>Connections</span></div>
+    <div class="nav-links">
+      <a href="index.html" class="btn btn-ghost btn-sm">← Play Game</a>
+    </div>
+  </div>
+</nav>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div style="font-size:40px;margin-bottom:12px;">🔐</div>
+    <h2>Editor</h2>
+    <p>Enter the password to manage puzzles.</p>
+    <div class="form-row">
+      <input type="password" id="pw-input" placeholder="Password..." onkeydown="if(event.key==='Enter')checkPw()" />
+    </div>
+    <button class="btn btn-primary" style="width:100%;" onclick="checkPw()">Enter →</button>
+    <p id="pw-error" style="color:#ef4444;font-size:12px;margin-top:10px;display:none;">❌ Incorrect password.</p>
+  </div>
+</div>
+
+<div id="editor-screen" style="display:none;">
+<div class="editor-wrap">
+
+  <div style="margin-bottom:28px;">
+    <h1 class="editor-title">Puzzle <span>Editor</span></h1>
+    <p style="font-size:14px;color:var(--text-muted);margin-top:4px;">Create and manage daily puzzles. Export when done and replace your puzzles.js file.</p>
+  </div>
+
+  <span class="section-label">Existing Puzzles</span>
+  <div class="puzzle-list" id="puzzle-list"></div>
+
+  <span class="section-label" id="form-label">Create New Puzzle</span>
+
+  <div class="form-card">
+    <div class="form-row">
+      <label>Puzzle Date</label>
+      <input type="date" id="puzzle-date" />
+    </div>
+  </div>
+
+  <div id="cat-forms"></div>
+
+  <span class="section-label" style="margin-top:24px;display:block;">Live Preview</span>
+  <div class="preview-grid" id="preview-grid"></div>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
+    <button class="btn btn-primary btn-lg" onclick="savePuzzle()">💾 Save Puzzle</button>
+    <button class="btn btn-outline" onclick="newPuzzle()">+ New Puzzle</button>
+    <button class="btn btn-outline" onclick="exportFile()">📤 Export puzzles.js</button>
+  </div>
+  <p style="font-size:12px;color:var(--text-muted);margin-top:12px;">
+    After exporting, replace <code style="background:var(--bg-raised);padding:2px 6px;border-radius:4px;font-family:monospace;">puzzles.js</code> on your server and redeploy.
+  </p>
+
+</div>
+</div>
+
+<div class="toast-bottom" id="toast-b"></div>
+
+<script src="puzzles.js"></script>
+<script>
+const DC = ['#f5c518','#5ade80','#60b5fa','#d084fc'];
+const DB = ['var(--yellow-bg)','var(--green-bg)','var(--blue-bg)','var(--purple-bg)'];
+const DN = ['🟨 Yellow — Easy','🟩 Green — Medium','🟦 Blue — Hard','🟪 Purple — Brutal'];
+
+let allPuzzles = JSON.parse(JSON.stringify(PUZZLES));
+let editIdx = null;
+
+function checkPw() {
+  if (document.getElementById('pw-input').value === EDITOR_PASSWORD) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('editor-screen').style.display = 'block';
+    initEditor();
+  } else {
+    document.getElementById('pw-error').style.display = 'block';
+  }
+}
+
+function initEditor() {
+  const saved = localStorage.getItem('nba-conn-editor-v2');
+  if (saved) { try { allPuzzles = JSON.parse(saved); } catch(e){} }
+  buildCatForms();
+  renderPuzzleList();
+  updatePreview();
+  const d = new Date(); d.setDate(d.getDate()+1);
+  document.getElementById('puzzle-date').value = d.toISOString().slice(0,10);
+}
+
+function buildCatForms() {
+  document.getElementById('cat-forms').innerHTML = [0,1,2,3].map(i=>`
+    <div class="cat-block" style="background:${DB[i]}20;border-color:${DC[i]}33;">
+      <div class="cat-block-header">
+        <div class="cat-dot" style="background:${DC[i]};"></div>
+        <div class="cat-block-title" style="color:${DC[i]};">${DN[i]}</div>
+      </div>
+      <div class="form-row">
+        <label>Category Label</label>
+        <input type="text" id="cl-${i}" placeholder='e.g. "Won NBA Finals MVP"' oninput="updatePreview()" />
+      </div>
+      <div class="players-2col">
+        ${[0,1,2,3].map(j=>`
+          <div class="form-row" style="margin-bottom:0">
+            <label>Player ${j+1}</label>
+            <input type="text" id="cp-${i}-${j}" placeholder="Player name" oninput="updatePreview()" />
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderPuzzleList() {
+  const el = document.getElementById('puzzle-list');
+  if (!allPuzzles.length) {
+    el.innerHTML = '<p style="font-size:13px;color:var(--text-muted);">No puzzles yet. Create one below!</p>';
+    return;
+  }
+  el.innerHTML = allPuzzles.map((p,i)=>`
+    <div class="puzzle-item ${editIdx===i?'active':''}" onclick="loadPuzzle(${i})">
+      <div>
+        <div class="puzzle-date">${p.date}</div>
+        <div class="puzzle-preview">${p.categories.map(c=>c.label).join(' · ')}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="display:flex;gap:4px;">${p.categories.map(c=>`<span class="difficulty-dot diff-${c.difficulty}"></span>`).join('')}</div>
+        <button class="btn btn-ghost btn-sm" style="color:#ef4444;padding:4px 8px;" onclick="delPuzzle(event,${i})">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updatePreview() {
+  const players = [];
+  [0,1,2,3].forEach(i=>[0,1,2,3].forEach(j=>{
+    const v = document.getElementById(`cp-${i}-${j}`)?.value?.trim();
+    if (v) players.push({name:v,diff:i});
+  }));
+  const shuffled = [...players].sort(()=>Math.random()-0.5);
+  const grid = document.getElementById('preview-grid');
+  const all16 = [...shuffled, ...Array(Math.max(0,16-shuffled.length)).fill(null)];
+  grid.innerHTML = all16.map(p => p
+    ? `<div class="preview-tile">
+        <div style="flex:1;width:100%;background:${DC[p.diff]}18;display:flex;align-items:center;justify-content:center;font-size:10px;color:${DC[p.diff]};font-weight:600;padding:4px;text-align:center;line-height:1.2;">${p.name}</div>
+        <div class="pt-name" style="color:${DC[p.diff]};">${p.name}</div>
+        <div class="pt-dot" style="background:${DC[p.diff]};"></div>
+       </div>`
+    : `<div class="preview-tile" style="opacity:0.2;"><div style="flex:1;width:100%;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text-muted);">?</div><div class="pt-name" style="color:var(--text-muted);">—</div></div>`
+  ).join('');
+}
+
+function loadPuzzle(idx) {
+  editIdx = idx;
+  const p = allPuzzles[idx];
+  document.getElementById('puzzle-date').value = p.date;
+  document.getElementById('form-label').textContent = `Editing — ${p.date}`;
+  p.categories.forEach(cat => {
+    document.getElementById(`cl-${cat.difficulty}`).value = cat.label;
+    cat.players.forEach((pl,j) => document.getElementById(`cp-${cat.difficulty}-${j}`).value = pl);
+  });
+  updatePreview();
+  renderPuzzleList();
+  document.getElementById('cat-forms').scrollIntoView({behavior:'smooth'});
+}
+
+function savePuzzle() {
+  const date = document.getElementById('puzzle-date').value;
+  if (!date) { toast('Please set a date.'); return; }
+
+  const cats = [0,1,2,3].map(i=>({
+    difficulty:i,
+    label:document.getElementById(`cl-${i}`).value.trim(),
+    players:[0,1,2,3].map(j=>document.getElementById(`cp-${i}-${j}`).value.trim()).filter(Boolean)
+  }));
+
+  for (const c of cats) {
+    if (!c.label) { toast(`Missing label for ${DN[c.difficulty]}`); return; }
+    if (c.players.length!==4) { toast(`${DN[c.difficulty]} needs exactly 4 players.`); return; }
+  }
+
+  const allNames = cats.flatMap(c=>c.players);
+  if (new Set(allNames).size!==16) { toast('All 16 players must be unique.'); return; }
+
+  const puzzle = {date, categories: cats};
+
+  if (editIdx !== null) {
+    allPuzzles[editIdx] = puzzle;
+  } else {
+    if (allPuzzles.some(p=>p.date===date)) { toast('A puzzle for this date already exists.'); return; }
+    allPuzzles.push(puzzle);
+    allPuzzles.sort((a,b)=>a.date.localeCompare(b.date));
+  }
+
+  localStorage.setItem('nba-conn-editor-v2', JSON.stringify(allPuzzles));
+  renderPuzzleList();
+  toast('✅ Saved! Export when you\'re done.');
+}
+
+function delPuzzle(e, idx) {
+  e.stopPropagation();
+  if (!confirm('Delete this puzzle?')) return;
+  allPuzzles.splice(idx,1);
+  if (editIdx===idx) { editIdx=null; newPuzzle(); }
+  localStorage.setItem('nba-conn-editor-v2', JSON.stringify(allPuzzles));
+  renderPuzzleList();
+  toast('Puzzle deleted.');
+}
+
+function newPuzzle() {
+  editIdx = null;
+  document.getElementById('form-label').textContent = 'Create New Puzzle';
+  const d = new Date(); d.setDate(d.getDate()+1);
+  document.getElementById('puzzle-date').value = d.toISOString().slice(0,10);
+  [0,1,2,3].forEach(i=>{
+    document.getElementById(`cl-${i}`).value='';
+    [0,1,2,3].forEach(j=>document.getElementById(`cp-${i}-${j}`).value='');
+  });
+  updatePreview();
+  renderPuzzleList();
+}
+
+function exportFile() {
+  const saved = localStorage.getItem('nba-conn-editor-v2');
+  const data = saved ? JSON.parse(saved) : allPuzzles;
+  const content = `// NBA Connections Puzzle Data
+// difficulty: 0=yellow(easy), 1=green(medium), 2=blue(hard), 3=purple(brutal)
+
+const PUZZLES = ${JSON.stringify(data, null, 2)};
+
+const EDITOR_PASSWORD = "${EDITOR_PASSWORD}";
+
+if (typeof module !== 'undefined') module.exports = { PUZZLES, EDITOR_PASSWORD };
+`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content],{type:'application/javascript'}));
+  a.download = 'puzzles.js';
+  a.click();
+  toast('📤 Exported! Replace puzzles.js and redeploy.');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast-b');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 3200);
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  const saved = localStorage.getItem('nba-conn-editor-v2');
+  if (saved) { try { allPuzzles = JSON.parse(saved); } catch(e){} }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NBA Connections — Daily NBA Puzzle</title>
+<meta name="description" content="Group 16 NBA players into 4 categories. A new puzzle every day." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0a04;--card:#1a1008;--raised:#261808;
+  --b:#3a2510;--bl:#5a3a18;
+  --t:#f5e8d0;--tm:#7a5830;--ts:#b08050;
+  --a:#e8820a;--ag:rgba(232,130,10,0.22);
+  --floor:#c8823a;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',-apple-system,sans-serif;
+  background:var(--bg);color:var(--t);min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(255,180,80,.012) 60px,rgba(255,180,80,.012) 61px),
+    repeating-linear-gradient(0deg,transparent,transparent 100px,rgba(255,180,80,.008) 100px,rgba(255,180,80,.008) 101px);
+}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;background:rgba(8,5,1,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--b);display:flex;align-items:center}
+.ni{max-width:720px;margin:0 auto;padding:0 20px;width:100%;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--t)}
+.logo span{color:var(--a)}
+.nbs{display:flex;gap:4px}
+.nb{background:transparent;border:none;color:var(--ts);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;padding:6px 10px;border-radius:6px;cursor:pointer;transition:all .15s;letter-spacing:.3px}
+.nb:hover{background:var(--raised);color:var(--t)}
+
+/* WRAP */
+.w{max-width:720px;margin:0 auto;padding:76px 16px 80px}
+
+/* HEADER */
+.hdr{text-align:center;margin-bottom:24px}
+.ttl{font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:1;letter-spacing:3px;color:var(--t)}
+.ttl span{color:var(--a)}
+.dt{font-size:11px;color:var(--tm);letter-spacing:3px;text-transform:uppercase;margin-top:6px}
+
+/* COURT LINE */
+.cl{display:flex;align-items:center;gap:12px;margin-bottom:22px;opacity:.35}
+.cl-l{flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--floor),transparent)}
+
+/* MISTAKES */
+.mk{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px}
+.mk-t{font-size:11px;color:var(--tm);font-weight:600;letter-spacing:2px;text-transform:uppercase}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--raised);border:1.5px solid var(--bl);transition:all .3s}
+.dot.u{background:var(--a);border-color:var(--a);box-shadow:0 0 10px var(--ag);transform:scale(1.15)}
+
+/* SOLVED */
+.sv{display:flex;flex-direction:column;gap:6px;margin-bottom:6px}
+.sb{border-radius:12px;padding:14px 16px;text-align:center;animation:pop .4s cubic-bezier(.34,1.56,.64,1)}
+.sb .sl{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
+.sb .sp{font-size:13px;color:rgba(245,232,208,.75);font-weight:500}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+
+/* CARD */
+.card{
+  border-radius:14px;border:2px solid var(--b);background:var(--card);
+  cursor:pointer;overflow:hidden;
+  transition:border-color .18s, transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s;
+  display:flex;flex-direction:column;aspect-ratio:2/3;
+  user-select:none;position:relative;
+}
+/* Photo area */
+.cp{flex:1;position:relative;overflow:hidden;background:var(--raised)}
+.cp img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:top center;
+  opacity:0;transition:opacity .4s;
+}
+.cp img.on{opacity:1}
+/* Shimmer skeleton */
+.cp .sh{
+  position:absolute;inset:0;
+  background:linear-gradient(90deg,var(--raised) 0%,var(--bl) 50%,var(--raised) 100%);
+  background-size:200% 100%;
+  animation:shim 1.6s ease-in-out infinite;
+}
+.cp .sh.done{display:none}
+/* Initials fallback */
+.cp .fb{
+  position:absolute;inset:0;display:none;
+  align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:28px;
+  color:var(--tm);letter-spacing:2px;
+}
+/* Name bar */
+.cn{
+  padding:7px 5px 7px;text-align:center;
+  font-size:9.5px;font-weight:700;color:var(--t);
+  background:var(--card);border-top:1px solid var(--b);
+  letter-spacing:.8px;text-transform:uppercase;line-height:1.2;
+  flex-shrink:0;
+}
+
+/* Hover */
+.card:hover:not(.s):not(.g){
+  border-color:var(--floor);
+  transform:translateY(-3px) scale(1.03);
+  box-shadow:0 10px 28px rgba(0,0,0,.5);
+}
+.card:hover:not(.s):not(.g) img{transform:scale(1.06)}
+
+/* Selected */
+.card.s{
+  border-color:var(--a);
+  transform:translateY(-4px) scale(1.05);
+  box-shadow:0 0 0 1px var(--a),0 14px 32px var(--ag);
+}
+.card.s .cn{background:#200e02;color:var(--a)}
+.card.s::after{
+  content:'✓';position:absolute;top:7px;right:8px;
+  font-size:11px;font-weight:900;color:var(--a);
+  background:rgba(0,0,0,.65);border-radius:50%;
+  width:18px;height:18px;line-height:18px;text-align:center;
+}
+
+/* Animations */
+.card.bk{animation:bnc .5s ease}
+.card.sh2{animation:shk .45s ease;border-color:#7a1a1a!important}
+.card.sh2 .cn{background:#200505!important;color:#ef4444!important}
+.card.g{opacity:0;transform:scale(.85);pointer-events:none;transition:all .3s}
+
+/* ACTIONS */
+.acts{display:flex;gap:8px;justify-content:center}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:9px 18px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;border-radius:9px;cursor:pointer;border:1.5px solid transparent;transition:all .15s;letter-spacing:.2px}
+.btn:active{transform:scale(.96)}
+.btn:disabled{opacity:.3;cursor:not-allowed;transform:none!important}
+.btn-o{background:transparent;color:var(--ts);border-color:var(--bl)}
+.btn-o:hover{background:var(--raised);color:var(--t);border-color:var(--floor)}
+.btn-p{background:var(--a);color:#fff;border-color:var(--a);box-shadow:0 4px 16px var(--ag)}
+.btn-p:hover:not(:disabled){background:#c8700a}
+
+/* TOAST */
+.toast{position:fixed;top:68px;left:50%;transform:translateX(-50%) translateY(-8px);background:var(--t);color:var(--bg);padding:9px 20px;border-radius:8px;font-size:13px;font-weight:700;opacity:0;transition:all .22s;z-index:300;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.5);pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* OVERLAY / MODAL */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(8px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+.ov.off{display:none}
+.modal{background:var(--card);border:1px solid var(--bl);border-radius:20px;padding:32px;max-width:440px;width:100%;position:relative;box-shadow:0 32px 80px rgba(0,0,0,.8);max-height:90vh;overflow-y:auto}
+.mx{position:absolute;top:16px;right:16px;background:var(--raised);border:none;color:var(--tm);font-size:16px;cursor:pointer;padding:6px 9px;border-radius:8px;transition:all .15s;line-height:1}
+.mx:hover{background:var(--bl);color:var(--t)}
+.mt{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:2px;color:var(--t);margin-bottom:18px}
+.mt span{color:var(--a)}
+
+/* STATS */
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+.sb2{background:var(--raised);border:1px solid var(--b);border-radius:10px;padding:12px 8px;text-align:center}
+.sn{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--t);line-height:1}
+.sl2{font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:1.5px;margin-top:2px}
+.dr{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.dl{font-size:11px;color:var(--tm);width:82px;flex-shrink:0}
+.dt2{flex:1;background:var(--bg);border-radius:4px;height:20px;overflow:hidden}
+.df{height:100%;background:var(--a);border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:7px;transition:width .6s;min-width:24px}
+.df span{font-size:11px;font-weight:700;color:#fff}
+.shg{font-family:'Courier New',monospace;font-size:22px;letter-spacing:4px;text-align:center;background:var(--bg);border:1px solid var(--b);border-radius:10px;padding:14px;margin:14px 0;line-height:1.8}
+.str{display:flex;gap:20px;justify-content:center;margin:16px 0}
+.si{text-align:center}
+.stn{font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--t);line-height:1}
+.stl{font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:2px}
+.div{height:1px;background:var(--b);margin:18px 0}
+.lbl{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--tm);margin-bottom:12px}
+.hr{display:flex;gap:10px;margin-bottom:10px;font-size:13px;color:var(--ts);line-height:1.5}
+.dd{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px}
+.ddot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+
+/* ALREADY PLAYED */
+.ps{text-align:center;padding:60px 20px}
+.ps h2{font-family:'Bebas Neue',sans-serif;font-size:56px;color:var(--t);margin-bottom:8px}
+.ps p{font-size:15px;color:var(--tm);margin-bottom:28px}
+.cd{font-family:'Bebas Neue',sans-serif;font-size:68px;color:var(--a);letter-spacing:8px;text-shadow:0 0 40px var(--ag)}
+
+/* KEYFRAMES */
+@keyframes shim{0%,100%{background-position:-200% 0}50%{background-position:200% 0}}
+@keyframes pop{from{opacity:0;transform:scale(.8) translateY(14px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes bnc{0%,100%{transform:translateY(-4px) scale(1.05)}50%{transform:translateY(-16px) scale(1.05)}}
+@keyframes shk{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+
+@media(max-width:480px){
+  .cn{font-size:8px;padding:5px 3px}
+  .ttl{font-size:38px}
+  .grid{gap:5px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="ni">
+    <div class="logo">NBA <span>Connections</span></div>
+    <div class="nbs">
+      <button class="nb" onclick="open2('m-htp')">How to play</button>
+      <button class="nb" onclick="openStats()">📊 Stats</button>
+      <button class="nb" onclick="location.href='puzzle-editor.html'">✏️ Editor</button>
+    </div>
+  </div>
+</nav>
+
+<div class="w">
+  <div class="hdr">
+    <h1 class="ttl">NBA <span>Connections</span></h1>
+    <p class="dt" id="dl"></p>
+  </div>
+  <div class="cl"><div class="cl-l"></div><span style="font-size:16px">🏀</span><div class="cl-l"></div></div>
+
+  <div id="game">
+    <div class="sv" id="sv"></div>
+    <div class="grid" id="grid"></div>
+    <div class="mk">
+      <span class="mk-t">Remaining:</span>
+      <div class="dot" id="d0"></div><div class="dot" id="d1"></div>
+      <div class="dot" id="d2"></div><div class="dot" id="d3"></div>
+    </div>
+    <div class="acts">
+      <button class="btn btn-o" onclick="doShuffle()">🔀 Shuffle</button>
+      <button class="btn btn-o" onclick="doClear()">✕ Clear</button>
+      <button class="btn btn-p" id="sub" onclick="doSubmit()" disabled>Submit →</button>
+    </div>
+  </div>
+
+  <div id="played" style="display:none">
+    <div class="ps">
+      <div style="font-size:56px;margin-bottom:16px">🏀</div>
+      <h2>See you tomorrow!</h2>
+      <p>You've already played today's puzzle.<br>Next puzzle drops in:</p>
+      <div class="cd" id="cd">00:00:00</div>
+      <div style="margin-top:28px">
+        <button class="btn btn-p" onclick="openStats()" style="font-size:14px;padding:12px 28px">📊 View Stats</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- HOW TO PLAY -->
+<div class="ov off" id="m-htp">
+  <div class="modal">
+    <button class="mx" onclick="close2('m-htp')">✕</button>
+    <div class="mt">How to <span>Play</span></div>
+    <div class="hr">🏀 <span>Find <strong>4 groups of 4 NBA players</strong> that share something in common.</span></div>
+    <div class="hr">👆 <span>Select 4 players, then tap <strong>Submit</strong>.</span></div>
+    <div class="hr">⚠️ <span>You get <strong>4 mistakes</strong> total before game over.</span></div>
+    <div class="hr">📤 <span>Share your emoji result to flex on your friends.</span></div>
+    <div class="div"></div>
+    <div class="lbl">Difficulty</div>
+    <div class="dd"><div class="ddot" style="background:#f5c518"></div><span style="color:#f5c518;font-weight:700;min-width:60px">Yellow</span><span style="color:var(--tm)">Easiest</span></div>
+    <div class="dd"><div class="ddot" style="background:#4ade80"></div><span style="color:#4ade80;font-weight:700;min-width:60px">Green</span><span style="color:var(--tm)">Medium</span></div>
+    <div class="dd"><div class="ddot" style="background:#60b0fa"></div><span style="color:#60b0fa;font-weight:700;min-width:60px">Blue</span><span style="color:var(--tm)">Hard</span></div>
+    <div class="dd"><div class="ddot" style="background:#d080fc"></div><span style="color:#d080fc;font-weight:700;min-width:60px">Purple</span><span style="color:var(--tm)">Brutal</span></div>
+    <div class="div"></div>
+    <p style="font-size:12px;color:var(--tm)">A fresh puzzle every day at midnight. 🔥</p>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="ov off" id="m-stats">
+  <div class="modal">
+    <button class="mx" onclick="close2('m-stats')">✕</button>
+    <div class="mt">Your <span>Stats</span></div>
+    <div class="sg">
+      <div class="sb2"><div class="sn" id="s-p">0</div><div class="sl2">Played</div></div>
+      <div class="sb2"><div class="sn" id="s-w">0</div><div class="sl2">Won</div></div>
+      <div class="sb2"><div class="sn" id="s-s">0</div><div class="sl2">Streak 🔥</div></div>
+      <div class="sb2"><div class="sn" id="s-b">0</div><div class="sl2">Best 🏆</div></div>
+    </div>
+    <div class="div"></div>
+    <div class="lbl">Guess Distribution</div>
+    <div id="s-dist"></div>
+    <div id="s-res" style="display:none">
+      <div class="div"></div>
+      <div class="lbl">Today's Result</div>
+      <div class="shg" id="s-sg"></div>
+      <button class="btn btn-p" style="width:100%" onclick="copyShare()">📋 Copy & Share</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div class="ov off" id="m-res">
+  <div class="modal" style="text-align:center">
+    <div class="mt" id="r-t" style="margin-bottom:4px"></div>
+    <p style="font-size:14px;color:var(--tm);margin-bottom:16px" id="r-sub"></p>
+    <div class="str">
+      <div class="si"><div class="stn" id="r-str">0</div><div class="stl">Streak 🔥</div></div>
+      <div class="si"><div class="stn" id="r-best">0</div><div class="stl">Best 🏆</div></div>
+    </div>
+    <div class="shg" id="r-sg"></div>
+    <button class="btn btn-p" style="width:100%;font-size:14px;padding:13px;margin-bottom:10px" onclick="copyShare()">📋 Share Result</button>
+    <button class="btn btn-o" style="width:100%" onclick="close2('m-res')">See Board</button>
+  </div>
+</div>
+
+<script src="puzzles.js"></script>
+<script>
+// ===== IMAGE LOADING via Netlify proxy =====
+const IC = {}; // image cache: name -> url or null
+
+async function getImg(name) {
+  if (IC[name] !== undefined) return IC[name];
+  IC[name] = null;
+  try {
+    const r = await fetch(`/.netlify/functions/player-image?name=${encodeURIComponent(name)}`);
+    const d = await r.json();
+    IC[name] = d.imgUrl || null;
+  } catch(e) { IC[name] = null; }
+  return IC[name];
+}
+
+async function loadImg(name) {
+  const el = document.getElementById(cid(name));
+  if (!el) return;
+  const src = await getImg(name);
+  const img = el.querySelector('img');
+  const sh = el.querySelector('.sh');
+  const fb = el.querySelector('.fb');
+  if (src) {
+    img.src = src;
+    img.onload = () => { img.classList.add('on'); sh.classList.add('done'); };
+    img.onerror = () => { sh.classList.add('done'); fb.style.display = 'flex'; };
+  } else {
+    sh.classList.add('done');
+    fb.style.display = 'flex';
+  }
+}
+
+// ===== CONSTANTS =====
+const DCC = ['#f5c518','#4ade80','#60b0fa','#d080fc'];
+const DBG = ['#2a1e02','#061a0e','#060e1a','#120818'];
+const DBD = ['#7a5508','#1a5a2a','#1a407a','#5a1a8a'];
+const DEM = ['🟨','🟩','🟦','🟪'];
+
+// ===== HELPERS =====
+function cid(n) { return 'c-' + n.replace(/[^a-z0-9]/gi, '-').toLowerCase(); }
+function ini(n) { return n.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(); }
+function shuf(a) { for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } }
+function tod() { return new Date().toISOString().slice(0, 10); }
+function gs() {
+  return JSON.parse(localStorage.getItem('nba-conn-v4') || JSON.stringify({
+    played:0, won:0, streak:0, best:0,
+    dist:{0:0,1:0,2:0,3:0,4:0},
+    lastDate:null, lastHist:null
+  }));
+}
+function ss(s) { localStorage.setItem('nba-conn-v4', JSON.stringify(s)); }
+
+// ===== STATE =====
+let puzzle, tiles, sel, solved, errs, over, hist;
+
+// ===== BOOT =====
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('dl').textContent = new Date().toLocaleDateString('en-US', {
+    weekday:'long', month:'long', day:'numeric', year:'numeric'
+  });
+
+  const t = tod();
+  puzzle = PUZZLES.find(p => p.date === t) || PUZZLES[PUZZLES.length - 1];
+
+  const st = gs();
+  if (st.lastDate === t) {
+    document.getElementById('game').style.display = 'none';
+    document.getElementById('played').style.display = 'block';
+    countdown();
+    return;
+  }
+
+  setup();
+  open2('m-htp');
+});
+
+function setup() {
+  tiles = puzzle.categories.flatMap(c => c.players.map(p => ({ name:p, cat:c })));
+  shuf(tiles);
+  sel=[]; solved=[]; errs=0; over=false; hist=[];
+  render();
+  dots();
+  document.getElementById('sv').innerHTML = '';
+}
+
+function render() {
+  const unsolved = tiles.filter(t => !solved.some(s => s.players.includes(t.name)));
+  document.getElementById('grid').innerHTML = unsolved.map(t => `
+    <div class="card ${sel.includes(t.name)?'s':''}" id="${cid(t.name)}" onclick="tog('${t.name.replace(/'/g,"\\'")}')">
+      <div class="cp">
+        <div class="sh"></div>
+        <img src="" alt="${t.name}" />
+        <div class="fb">${ini(t.name)}</div>
+      </div>
+      <div class="cn">${t.name}</div>
+    </div>`).join('');
+
+  // Stagger loads: 150ms apart to be gentle on the API
+  unsolved.forEach((t, i) => setTimeout(() => loadImg(t.name), i * 150));
+  subBtn();
+}
+
+function tog(name) {
+  if (over) return;
+  const i = sel.indexOf(name);
+  if (i > -1) sel.splice(i, 1);
+  else { if (sel.length >= 4) return; sel.push(name); }
+  // Just toggle class without full re-render (preserves loaded images)
+  document.querySelectorAll('.card').forEach(el => {
+    const n = el.querySelector('.cn').textContent;
+    el.classList.toggle('s', sel.includes(n));
+  });
+  // Update checkmark: force re-render only for affected cards
+  render();
+}
+
+function doClear() { sel = []; render(); }
+
+function doShuffle() {
+  const u = tiles.filter(t => !solved.some(s => s.players.includes(t.name)));
+  shuf(u);
+  const sv = tiles.filter(t => solved.some(s => s.players.includes(t.name)));
+  tiles = [...sv, ...u];
+  render();
+}
+
+function subBtn() { document.getElementById('sub').disabled = sel.length !== 4; }
+
+function dots() {
+  for (let i = 0; i < 4; i++) document.getElementById(`d${i}`).classList.toggle('u', i >= 4 - errs);
+}
+
+function doSubmit() {
+  if (sel.length !== 4 || over) return;
+  const cats = sel.map(n => puzzle.categories.find(c => c.players.includes(n)));
+  const same = cats.every(c => c === cats[0]);
+  hist.push(sel.map(n => puzzle.categories.find(c => c.players.includes(n)).difficulty));
+
+  if (same) {
+    animSolve(cats[0]);
+  } else {
+    errs++; dots();
+    // One away check
+    const g = {};
+    cats.forEach(c => { g[c.difficulty] = (g[c.difficulty]||0)+1; });
+    if (Math.max(...Object.values(g)) === 3) toast('One away... 👀');
+    // Shake
+    sel.forEach(n => {
+      const el = document.getElementById(cid(n));
+      if (el) { el.classList.add('sh2'); setTimeout(() => el.classList.remove('sh2'), 500); }
+    });
+    if (errs >= 4) setTimeout(() => endGame(false), 700);
+  }
+}
+
+function animSolve(cat) {
+  sel.forEach(n => { const el = document.getElementById(cid(n)); if (el) el.classList.add('bk'); });
+  setTimeout(() => {
+    solved.push(cat); sel = [];
+    const b = document.createElement('div');
+    b.className = 'sb';
+    b.style.cssText = `border:1px solid ${DBD[cat.difficulty]};background:${DBG[cat.difficulty]}`;
+    b.innerHTML = `<div class="sl" style="color:${DCC[cat.difficulty]}">${cat.label}</div><div class="sp">${cat.players.join(' · ')}</div>`;
+    document.getElementById('sv').appendChild(b);
+    render();
+    if (solved.length === 4) setTimeout(() => endGame(true), 600);
+  }, 500);
+}
+
+function endGame(won) {
+  over = true;
+  const st = gs();
+  st.played++;
+  if (won) {
+    st.won++; st.streak++; st.best = Math.max(st.best, st.streak);
+    st.dist[errs] = (st.dist[errs]||0)+1;
+  } else {
+    st.streak = 0; st.dist[4] = (st.dist[4]||0)+1;
+    // Reveal remaining
+    puzzle.categories.filter(c => !solved.find(s => s.label === c.label)).forEach(cat => {
+      solved.push(cat);
+      const b = document.createElement('div');
+      b.className = 'sb';
+      b.style.cssText = `border:1px solid ${DBD[cat.difficulty]};background:${DBG[cat.difficulty]}`;
+      b.innerHTML = `<div class="sl" style="color:${DCC[cat.difficulty]}">${cat.label}</div><div class="sp">${cat.players.join(' · ')}</div>`;
+      document.getElementById('sv').appendChild(b);
+    });
+    render();
+  }
+  st.lastDate = tod(); st.lastHist = hist; ss(st);
+  setTimeout(() => showRes(won, st), 900);
+}
+
+function sgrid(h) { return h.map(g => g.map(d => DEM[d]).join('')).join('\n'); }
+
+function showRes(won, st) {
+  const titles = ['🏆 PERFECT!', '🔥 NICE!', '✅ SOLVED!', '😤 CLOSE!'];
+  const rt = document.getElementById('r-t');
+  rt.innerHTML = won
+    ? `<span>${titles[Math.min(errs, 3)]}</span>`
+    : '😬 <span>NEXT TIME</span>';
+  document.getElementById('r-sub').textContent = won
+    ? `Solved with ${errs} mistake${errs!==1?'s':''}!`
+    : 'Ran out of guesses. Better luck tomorrow!';
+  document.getElementById('r-str').textContent = st.streak;
+  document.getElementById('r-best').textContent = st.best;
+  document.getElementById('r-sg').textContent = sgrid(hist);
+  open2('m-res');
+}
+
+function copyShare() {
+  const t = new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'});
+  const txt = `NBA Connections — ${t}\nMistakes: ${errs}/4\n\n${sgrid(hist)}\n\nnbaconnections.app`;
+  navigator.clipboard.writeText(txt).then(() => toast('📋 Copied!')).catch(() => toast('Copy failed'));
+}
+
+function openStats() {
+  const st = gs();
+  document.getElementById('s-p').textContent = st.played;
+  document.getElementById('s-w').textContent = st.won;
+  document.getElementById('s-s').textContent = st.streak;
+  document.getElementById('s-b').textContent = st.best;
+  const lbs = ['0 mistakes','1 mistake','2 mistakes','3 mistakes','Failed'];
+  const mx = Math.max(...Object.values(st.dist), 1);
+  document.getElementById('s-dist').innerHTML = Object.entries(st.dist).map(([k,v]) => `
+    <div class="dr">
+      <span class="dl">${lbs[k]}</span>
+      <div class="dt2"><div class="df" style="width:${Math.max(v ? (v/mx)*100 : 0, v?5:0)}%">
+        <span>${v||''}</span></div></div>
+    </div>`).join('');
+  const lr = document.getElementById('s-res');
+  const st2 = gs();
+  if (st2.lastDate === tod() && st2.lastHist) {
+    lr.style.display = 'block';
+    document.getElementById('s-sg').textContent = sgrid(st2.lastHist);
+  } else lr.style.display = 'none';
+  open2('m-stats');
+}
+
+function toast(msg, dur=2400) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('on');
+  setTimeout(() => el.classList.remove('on'), dur);
+}
+function open2(id) { document.getElementById(id).classList.remove('off'); }
+function close2(id) { document.getElementById(id).classList.add('off'); }
+
+function countdown() {
+  const fn = () => {
+    const now = new Date(), t = new Date(now);
+    t.setDate(t.getDate()+1); t.setHours(0,0,0,0);
+    const d = t - now;
+    const h = String(Math.floor(d/3600000)).padStart(2,'0');
+    const m = String(Math.floor((d%3600000)/60000)).padStart(2,'0');
+    const s = String(Math.floor((d%60000)/1000)).padStart(2,'0');
+    const el = document.getElementById('cd'); if (el) el.textContent = `${h}:${m}:${s}`;
+  };
+  fn(); setInterval(fn, 1000);
+}
+</script>
+</body>
+</html>
